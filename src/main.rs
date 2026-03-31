@@ -44,7 +44,7 @@ fn lex_string(str: String) -> Vec<Token> {
             '/' => { Token::Op(Operator::Divi) },
             '(' => { Token::LParen },
             ')' => { Token::RParen },
-            _ => panic!("failed to lex expression, unknown token")
+            _ => panic!("failed to lex expression, unknown token: {}", i)
         };
         expr.push(token)
     }
