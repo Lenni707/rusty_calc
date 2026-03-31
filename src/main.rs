@@ -1,37 +1,52 @@
-// i will be building and reading out a simple parse tree for a calc
-// the enum grammarItem should represent/represents the type of Item, the inpit can be
-// the struct ParseNode represents one enitity of the parse tree (all enitites have the type parsenode). A Entity has a value 
-// and possible children, which are stored in a vec and also have possible children and so on
-// 
-// TODO ->
-// - with my extremely tuff whiteboard, visualize how a parse tree works
-// code the actual logic so:
-// a lexer, which turns the input componets (+, - etc) into a GrammarItem
-// a parser which takes the output of the lexer and turns it into a parse tree
-// the actual code that reads out the parse tree and outputs the result
+use std::io;
 
-enum GrammarItem {
-    Product,
-    Sum,
-    Number(u64),
-    Parenthese
-}
-struct ParseNode {
-    children: Vec<ParseNode>,
-    value: GrammarItem
+#[derive(Debug)]
+enum Token {
+    Number(f64),
+    Op(Operator),
+    LParen,
+    RParen
 }
 
-impl ParseNode {
-    fn new() -> ParseNode {
-        ParseNode {
-            children: Vec::new(),
-            value: GrammarItem::Parenthese
-        }
-    }
+#[derive(Debug)]
+enum Operator  {
+    Add,
+    Sub,
+    Mul,
+    Divi
 }
-
-
 
 fn main() {
-    println!("Hello, world!");
+    let mut input = String::new();
+
+    io::stdin().read_line(&mut input).unwrap();
+
+    let input = input.trim().to_string(); // ← FIX
+
+    let expr = lex_string(input);
+
+    println!("{:?}", expr);
+}
+
+fn lex_string(str: String) -> Vec<Token> { 
+    let mut expr: Vec<Token> = Vec::new();
+    for i in str.chars() {
+        if i == ' ' { continue; }
+        let token: Token = match i {
+            c if c.is_ascii_digit() => {
+                    let num = c.to_digit(10).unwrap() as f64;
+                    Token::Number(num)
+                    
+                },
+            '+' => { Token::Op(Operator::Add) },
+            '-' => { Token::Op(Operator::Sub) },
+            '*' => { Token::Op(Operator::Mul) },
+            '/' => { Token::Op(Operator::Divi) },
+            '(' => { Token::LParen },
+            ')' => { Token::RParen },
+            _ => panic!("failed to lex expression, unknown token")
+        };
+        expr.push(token)
+    }
+    expr
 }
