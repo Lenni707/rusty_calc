@@ -1,6 +1,6 @@
 use std::io;
 
-#[derive(Debug)]
+#[derive(Debug)] // for printing test
 enum Token {
     Number(f64),
     Op(Operator),
@@ -8,7 +8,7 @@ enum Token {
     RParen
 }
 
-#[derive(Debug)]
+#[derive(Debug)] 
 enum Operator  {
     Add,
     Sub,
@@ -28,25 +28,45 @@ fn main() {
     println!("{:?}", expr);
 }
 
-fn lex_string(str: String) -> Vec<Token> { 
+fn lex_string(input: String) -> Vec<Token> { 
     let mut expr: Vec<Token> = Vec::new();
-    for i in str.chars() {
-        if i == ' ' { continue; }
-        let token: Token = match i {
+    let mut chars = input.chars().peekable();
+
+    while let Some(c) = chars.peek() { // also basicly guckt peek() immer eine position nach vorne (returned eine Option) und while let guckt ob peek() Some oder None returned also wie if let
+        if c.is_whitespace() {
+            chars.next();
+            continue;
+        }
+
+        let token = match c {
             c if c.is_ascii_digit() => {
-                    let num = c.to_digit(10).unwrap() as f64;
-                    Token::Number(num)
-                    
-                },
-            '+' => { Token::Op(Operator::Add) },
-            '-' => { Token::Op(Operator::Sub) },
-            '*' => { Token::Op(Operator::Mul) },
-            '/' => { Token::Op(Operator::Divi) },
-            '(' => { Token::LParen },
-            ')' => { Token::RParen },
-            _ => panic!("failed to lex expression, unknown token: {}", i)
+                let mut num_str = String::new();
+
+                while let Some(c) = chars.peek() { // macht aus hintereiander steheden ziffern die gesamt nummer
+                    if c.is_ascii_digit() || *c == '.' {
+                        num_str.push(*c);
+                        chars.next();
+                    } else {
+                        break;
+                    }
+                }
+
+                let num = num_str.parse::<f64>().unwrap(); // cooles rust ding macht string => u64
+                Token::Number(num)
+            }
+
+            '+' => { chars.next(); Token::Op(Operator::Add) }
+            '-' => { chars.next(); Token::Op(Operator::Sub) }
+            '*' => { chars.next(); Token::Op(Operator::Mul) }
+            '/' => { chars.next(); Token::Op(Operator::Divi) }
+            '(' => { chars.next(); Token::LParen }
+            ')' => { chars.next(); Token::RParen }
+
+            _ => panic!("failed to lex expression, unknown token: {}", c)
         };
-        expr.push(token)
+
+        expr.push(token);
     }
+
     expr
 }
