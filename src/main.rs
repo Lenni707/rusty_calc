@@ -51,7 +51,7 @@ fn lex_string(input: String) -> Vec<Token> {
                     }
                 }
 
-                let num = num_str.parse::<f64>().unwrap(); // cooles rust ding macht string => u64
+                let num = num_str.parse::<f64>().expect("parsing failed with"); // cooles rust ding macht string => u64
                 Token::Number(num)
             }
 
