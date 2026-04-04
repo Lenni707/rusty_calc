@@ -1,4 +1,4 @@
-use std::io;
+use std::{io, result};
 
 #[derive(Debug)] // for printing test
 enum Token {
@@ -107,8 +107,6 @@ impl Parser {
     }
 }
 
-
-
 fn main() {
     loop {
         let mut input = String::new();
@@ -117,14 +115,18 @@ fn main() {
 
         let input = input.trim().to_string();
 
-        let tokens = lex_string(input);
-
-        let mut parser = Parser::new(tokens);
-
-        let expr = parser.parse_exp();
-
-        println!("= {}", eval(expr))
+        let result = calc(input);
+        
+        println!("= {}", result)
     }
+}
+
+fn calc(input: String) -> f64 {
+    let tokens = lex_string(input);
+    let mut parser = Parser::new(tokens);
+    let expr = parser.parse_exp();
+    let result = eval(expr);
+    result
 }
 
 fn eval(expr: Expr) -> f64 { // so eine tuffe rekursion krank: Ich geh rein gucke was es it: Meisten eine riesige mathop:, und dann gehe ich halt rekursiv immer tiefer also dann gucke ich wieder: number oder mathop und so weiter
