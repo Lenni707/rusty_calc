@@ -95,8 +95,14 @@ impl Parser {
     fn parse_primary(&mut self) -> Expr {
         match self.consume() {
             Some(Token::Number(n)) => Expr::Number(*n),
-            Some(Token::LParen) => panic!("rekursion schäre diggi {:?}", self.peek()),
-            _ => panic!("grammar rules not satisfied {:?}", self.peek())
+            Some(Token::LParen) => {
+                let expr = self.parse_exp(); // start again so REKURSIIIION OMG OMG OMG
+                match self.consume() {
+                    Some(Token::RParen) => expr,
+                    _ => panic!("right parenthese expected, instead found {:?}", self.peek())
+                }
+            },
+            _ => panic!("grammar rules not satisfied")
         }
     }
 }
@@ -104,19 +110,37 @@ impl Parser {
 
 
 fn main() {
-    let mut input = String::new();
+    loop {
+        let mut input = String::new();
 
-    io::stdin().read_line(&mut input).unwrap();
+        io::stdin().read_line(&mut input).unwrap();
 
-    let input = input.trim().to_string();
+        let input = input.trim().to_string();
 
-    let tokens = lex_string(input);
+        let tokens = lex_string(input);
 
-    let mut parser = Parser::new(tokens);
+        let mut parser = Parser::new(tokens);
 
-    let ast = parser.parse_exp();
+        let expr = parser.parse_exp();
 
-    println!("{:?}", ast);
+        println!("= {}", eval(expr))
+    }
+}
+
+fn eval(expr: Expr) -> f64 { // so eine tuffe rekursion krank: Ich geh rein gucke was es it: Meisten eine riesige mathop:, und dann gehe ich halt rekursiv immer tiefer also dann gucke ich wieder: number oder mathop und so weiter
+    match expr {
+        Expr::Number(n) => n,
+        Expr::MathOp { op, left, right } => {
+            let l = eval(*left);
+            let r = eval(*right);
+            match op {
+                Operator::Add => l + r,
+                Operator::Sub => l - r,
+                Operator::Mul => l * r,
+                Operator::Divi => l / r
+            }
+        }
+    }
 }
 
 fn lex_string(input: String) -> Vec<Token> { 
