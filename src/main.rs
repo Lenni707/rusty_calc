@@ -8,7 +8,7 @@ enum Token {
     RParen
 }
 
-#[derive(Debug)] 
+#[derive(Debug, Clone)] 
 enum Operator  {
     Add,
     Sub,
@@ -16,16 +16,107 @@ enum Operator  {
     Divi
 }
 
+#[derive(Debug)] 
+enum Expr{
+    Number(f64),
+    MathOp {
+        op: Operator,
+        left: Box<Expr>,
+        right: Box<Expr>,
+    }
+}
+
+#[derive(Debug)] 
+struct Parser {
+    tokens: Vec<Token>,
+    pos: usize
+}
+
+impl Parser {
+    fn new(tokens: Vec<Token>) -> Self {
+        Parser { tokens, pos: 0 }
+    }
+    fn peek(&self) -> Option<&Token> { // checks the value at a pos without advancing the pos
+        self.tokens.get(self.pos)
+    }
+    fn consume(&mut self) -> Option<&Token> { // gets the value at this specifc pos and advances the pos 
+        let t = self.tokens.get(self.pos);
+        self.pos += 1;
+        t
+    }
+    fn parse_exp(&mut self) -> Expr {
+        let mut left = self.parse_term();
+
+        loop {
+            match self.peek() {
+                Some(Token::Op(Operator::Add)) | Some(Token::Op(Operator::Sub)) => {
+                    let op = if let Some(Token::Op(op)) = self.consume() {
+                        op.clone()
+                    } else {
+                        unreachable!()
+                    };
+                    let right = self.parse_term();
+                    left = Expr::MathOp {
+                        op: op.clone(),
+                        left: Box::new(left),
+                        right: Box::new(right),
+                    };
+                }
+                _ => break
+            };
+        }
+        left
+    }
+
+    fn parse_term(&mut self) -> Expr {
+        let mut left = self.parse_primary();
+
+        loop {
+            match self.peek() {
+                Some(Token::Op(Operator::Mul)) | Some(Token::Op(Operator::Divi)) => {
+                    let op = if let Some(Token::Op(op)) = self.consume() {
+                        op.clone()
+                    } else {
+                        unreachable!()
+                    };
+                    let right = self.parse_primary();
+                    left = Expr::MathOp {
+                        op,
+                        left: Box::new(left),
+                        right: Box::new(right),
+                    };
+                }
+                _ => break,
+            }
+        }
+        left
+    }
+
+    fn parse_primary(&mut self) -> Expr {
+        match self.consume() {
+            Some(Token::Number(n)) => Expr::Number(*n),
+            Some(Token::LParen) => panic!("rekursion schäre diggi {:?}", self.peek()),
+            _ => panic!("grammar rules not satisfied {:?}", self.peek())
+        }
+    }
+}
+
+
+
 fn main() {
     let mut input = String::new();
 
     io::stdin().read_line(&mut input).unwrap();
 
-    let input = input.trim().to_string(); // ← FIX
+    let input = input.trim().to_string();
 
-    let expr = lex_string(input);
+    let tokens = lex_string(input);
 
-    println!("{:?}", expr);
+    let mut parser = Parser::new(tokens);
+
+    let ast = parser.parse_exp();
+
+    println!("{:?}", ast);
 }
 
 fn lex_string(input: String) -> Vec<Token> { 
