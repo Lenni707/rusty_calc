@@ -1,4 +1,4 @@
-use std::{io, result};
+use std::{io};
 
 #[derive(Debug)] // for printing test
 enum Token {
@@ -46,7 +46,7 @@ impl Parser {
     }
     fn parse_exp(&mut self) -> Expr {
         let mut left = self.parse_term();
-
+        
         loop {
             match self.peek() {
                 Some(Token::Op(Operator::Add)) | Some(Token::Op(Operator::Sub)) => {
